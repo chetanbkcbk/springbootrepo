@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('git checkout') {
             steps {
-             git 'https://github.com/Sushmaa123/Java-Springboot.git'
+             git 'https://github.com/vootlasaicharan/Java-Springboot.git'
             }
         }
          stage('compile') {
@@ -35,35 +35,52 @@ pipeline {
          stage('docker build') {
             steps {
              script {
-                 withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                    sh 'docker build -t ci-cd .'
-                  }
+                withCredentials([usernamePassword(
+                    credentialsId: "docker"
+                    usernameVariable: "USER"
+                    passwordVariable: "PASSWORD"
+                )])
+                // build docker image
+                sh "docker build -t ${USER}/java:01 ."
               }
             }
         }
          stage('docker push') {
             steps {
-             script {
-                withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                    sh 'docker tag ci-cd sushmagowda321/dev:1.0'
-                    sh 'docker push sushmagowda321/dev:1.0'
-                  }
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: "docker"
+                        usernameVariable: "USER"
+                        passwordVariable: "PASSWORD"
+                    )]){
+                        sh "echo ${DOCKERHUB_PASS} | docker login -u $USER -p $PASSWORD"
+                    }
+                // push docker image
+                sh "docker push ${USER}/ci-cd:v1"
               }
             }
          }    
         stage('docker container') {
             steps {
              script {
-                   withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                    sh 'docker run -itd --name ci-cd-container -p 57:8080 ci-cd'
-                  }
+                withCredentials([usernamePassword(
+                    credentialsId: "docker"
+                    usernameVariable: "USER"
+                    passwordVariable: "PASSWORD"
+                )]) {
+                    sh 'docker run -itd --name ci-cd-container -p 57:8080 ${USER}/ci-cd:v1'
+                }
               }
             }
         }
         stage('docker compose') {
             steps {
              script {
-                 withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+                 withCredentials([usernamePassword(
+                    credentialsId: "docker"
+                    usernameVariable: "USER"
+                    passwordVariable: "PASSWORD"
+                )])
                     sh 'docker-compose up -d'
                   }
               }
@@ -72,13 +89,13 @@ pipeline {
 
     }	
  
-    post {
-        always {
-            echo 'slack Notification.'
-            slackSend channel: '#general',
-            color: COLOR_MAP [currentBuild.currentResult],
-            message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URl}"
+    // post {
+    //     always {
+    //         echo 'slack Notification.'
+    //         slackSend channel: '#general',
+    //         color: COLOR_MAP [currentBuild.currentResult],
+    //         message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URl}"
             
-        }
-    }
+    //     }
+    // }
 }
