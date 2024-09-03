@@ -18,15 +18,15 @@ pipeline {
               sh 'mvn compile'
             }
         }
-         stage('code analysis') {
-            steps {
-              withSonarQubeEnv('sonar-server') {
-               sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Java-Springboot \
-               -Dsonar.java.binaries=. \
-               -Dsonar.projectKey=Java-Springboot'''
-              }
-            }
-        }
+        //  stage('code analysis') {
+        //     steps {
+        //       withSonarQubeEnv('sonar-server') {
+        //        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Java-Springboot \
+        //        -Dsonar.java.binaries=. \
+        //        -Dsonar.projectKey=Java-Springboot'''
+        //       }
+        //     }
+        // }
         stage('package') {
             steps {
               sh 'mvn install'
@@ -41,7 +41,7 @@ pipeline {
                     passwordVariable: "PASSWORD"
                 )])
                 // build docker image
-                sh "docker build -t ${USER}/java:01 ."
+                sh 'docker build -t ${USER}/java:01 .'
               }
             }
         }
@@ -53,49 +53,38 @@ pipeline {
                         usernameVariable: "USER"
                         passwordVariable: "PASSWORD"
                     )]){
-                        sh "echo ${DOCKERHUB_PASS} | docker login -u $USER -p $PASSWORD"
+                        sh 'echo ${DOCKERHUB_PASS} | docker login -u $USER -p $PASSWORD'
+                        // push docker image
+                        sh 'docker push ${USER}/java:01'
                     }
-                // push docker image
-                sh "docker push ${USER}/ci-cd:v1"
-              }
+                }
             }
-         }    
+        }    
         stage('docker container') {
             steps {
-             script {
-                withCredentials([usernamePassword(
-                    credentialsId: "docker"
-                    usernameVariable: "USER"
-                    passwordVariable: "PASSWORD"
-                )]) {
-                    sh 'docker run -itd --name ci-cd-container -p 57:8080 ${USER}/ci-cd:v1'
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: "docker"
+                        usernameVariable: "USER"
+                        passwordVariable: "PASSWORD"
+                    )]) {
+                        sh 'docker run -itd --name java-container -p 57:8080 ${USER}/java:01'
+                    }
                 }
-              }
             }
         }
         stage('docker compose') {
             steps {
-             script {
-                 withCredentials([usernamePassword(
-                    credentialsId: "docker"
-                    usernameVariable: "USER"
-                    passwordVariable: "PASSWORD"
-                )])
-                    sh 'docker-compose up -d'
-                  }
-              }
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: "docker"
+                        usernameVariable: "USER"
+                        passwordVariable: "PASSWORD"
+                    )]){
+                        sh 'docker-compose up -d'
+                    }
+                }
             }
         }
-
-    }	
- 
-    // post {
-    //     always {
-    //         echo 'slack Notification.'
-    //         slackSend channel: '#general',
-    //         color: COLOR_MAP [currentBuild.currentResult],
-    //         message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URl}"
-            
-    //     }
-    // }
+    }
 }
