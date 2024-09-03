@@ -1,12 +1,12 @@
-def COLOR_MAP = [
-    'SUCCESS': 'good',
-    'FAILURE': 'danger'
-    ]
+// def COLOR_MAP = [
+//     'SUCCESS': 'good',
+//     'FAILURE': 'danger'
+//     ]
 pipeline {
     agent any
-     environment {
-        SCANNER_HOME = tool 'sonarqube'
-    }
+    //  environment {
+    //     SCANNER_HOME = tool 'sonarqube'
+    // }
     stages {
         stage('git checkout') {
             steps {
