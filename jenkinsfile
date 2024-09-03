@@ -35,11 +35,6 @@ pipeline {
          stage('docker build') {
             steps {
              script {
-                withCredentials([usernamePassword(
-                    credentialsId: "docker"
-                    usernameVariable: "USER"
-                    passwordVariable: "PASSWORD"
-                )])
                 // build docker image
                 sh 'docker build -t ${USER}/java:01 .'
               }
@@ -49,9 +44,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: "docker"
-                        usernameVariable: "USER"
-                        passwordVariable: "PASSWORD"
+                        credentialsId: 'docker',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASSWORD'
                     )]){
                         sh 'echo ${DOCKERHUB_PASS} | docker login -u $USER -p $PASSWORD'
                         // push docker image
@@ -64,10 +59,10 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: "docker"
-                        usernameVariable: "USER"
-                        passwordVariable: "PASSWORD"
-                    )]) {
+                        credentialsId: 'docker',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASSWORD'
+                    )]){
                         sh 'docker run -itd --name java-container -p 57:8080 ${USER}/java:01'
                     }
                 }
@@ -77,9 +72,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: "docker"
-                        usernameVariable: "USER"
-                        passwordVariable: "PASSWORD"
+                        credentialsId: 'docker',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASSWORD'
                     )]){
                         sh 'docker-compose up -d'
                     }
