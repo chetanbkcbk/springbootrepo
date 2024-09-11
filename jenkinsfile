@@ -1,84 +1,45 @@
-// def COLOR_MAP = [
-//     'SUCCESS': 'good',
-//     'FAILURE': 'danger'
-//     ]
-pipeline {
+pipeline{
     agent any
-    //  environment {
-    //     SCANNER_HOME = tool 'sonarqube'
-    // }
-    stages {
-        stage('git checkout') {
-            steps {
-             git 'https://github.com/vootlasaicharan/Java-Springboot.git'
+
+    tools {
+        maven 'maven3'
+    }
+
+    environment{
+        SCANNER_HOME= tool 'sonar-scanner'
+    }
+    stages{
+        stage('git clone'){
+            steps{
+                git 'https://github.com/VootlaSaiCharan/Java-Springboot.git'
             }
         }
-         stage('compile') {
-            steps {
-              sh 'mvn compile'
+        stage('compile'){
+            steps{
+                sh 'mvn clean compile'
             }
         }
-        //  stage('code analysis') {
-        //     steps {
-        //       withSonarQubeEnv('sonar-server') {
-        //        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Java-Springboot \
-        //        -Dsonar.java.binaries=. \
-        //        -Dsonar.projectKey=Java-Springboot'''
-        //       }
-        //     }
-        // }
-        stage('package') {
-            steps {
-              sh 'mvn install'
+        stage('test'){
+            steps{
+                sh 'mvn test -DskipTest=True'
             }
         }
-         stage('docker build') {
-            steps {
-             script {
-                // build docker image
-                sh 'docker build -t ${USER}/java:01 .'
-              }
-            }
-        }
-         stage('docker push') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'docker',
-                        usernameVariable: 'USER',
-                        passwordVariable: 'PASSWORD'
-                    )]){
-                        sh 'echo ${DOCKERHUB_PASS} | docker login -u $USER -p $PASSWORD'
-                        // push docker image
-                        sh 'docker push ${USER}/java:01'
-                    }
-                }
-            }
-        }    
-        stage('docker container') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'docker',
-                        usernameVariable: 'USER',
-                        passwordVariable: 'PASSWORD'
-                    )]){
-                        sh 'docker run -itd --name java-container -p 57:8080 ${USER}/java:01'
-                    }
+        stages('sonarqube'){
+            steps{
+                withSonarQubeEnv('sonar') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=Java-Springboot -Dsonar.projectName=Java-Springboot \
+                    -Dsonar.java.binaries=. \ '''
                 }
             }
         }
-        stage('docker compose') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'docker',
-                        usernameVariable: 'USER',
-                        passwordVariable: 'PASSWORD'
-                    )]){
-                        sh 'docker-compose up -d'
-                    }
-                }
+        stage('build'){
+            steps{
+                sh 'mvn install'
+            }
+        }
+        stage('run'){
+            steps{
+                sh 'java -jar target/*.jar --server.port=7000'
             }
         }
     }
