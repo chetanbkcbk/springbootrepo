@@ -24,7 +24,7 @@ pipeline{
                 sh 'mvn test -DskipTest=True'
             }
         }
-        stages('sonarqube'){
+        stage('sonarqube'){
             steps{
                 withSonarQubeEnv('sonar') {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=Java-Springboot -Dsonar.projectName=Java-Springboot \
