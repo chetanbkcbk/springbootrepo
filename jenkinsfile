@@ -40,23 +40,28 @@ pipeline{
         stage('docker build'){
             steps{
                 script{
-                    sh 'docker build -t javaspringboot .'
+                    withDockerRegistry(credentialsId: 'docker-cred') {
+                        sh 'docker build -t javaspringboot .'
+                    }
                 }
             }
         }
         stage('docker run'){
             steps{
                 script{
-                    sh 'docker run -d -it --name cont_javaspringboot -p 7000:8080 javaspringboot'
+                    withDockerRegistry(credentialsId: 'docker-cred') {
+                        sh 'docker run -d -it --name cont_javaspringboot -p 7000:8080 javaspringboot'  
+                    }
                 }
             }
         }
         stage('docker push'){
             steps{
                 script{
-                    sh 'docker tag javaspringboot vootlasaicharan/javaspringboot:v1'
-                    sh  'docker push vootlasaicharan/javaspringboot:v1'
-
+                    withDockerRegistry(credentialsId: 'docker-cred') {
+                        sh 'docker tag javaspringboot vootlasaicharan/javaspringboot:v1'
+                        sh  'docker push vootlasaicharan/javaspringboot:v1'
+                    }
                 }
             }
         }
