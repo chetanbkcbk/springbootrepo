@@ -11,7 +11,7 @@ pipeline{
     stages{
         stage('git clone'){
             steps{
-                git 'https://github.com/VootlaSaiCharan/Java-Springboot.git'
+                git 'https://github.com/chetanbkcbk/springbootrepo.git'
             }
         }
         stage('compile'){
@@ -40,7 +40,7 @@ pipeline{
         stage('docker build'){
             steps{
                 script{
-                    withDockerRegistry(credentialsId: 'docker-cred') {
+                    withDockerRegistry(credentialsId: 'docker') {
                         sh 'docker build -t javaspringboot .'
                     }
                 }
@@ -49,7 +49,7 @@ pipeline{
         stage('docker run'){
             steps{
                 script{
-                    withDockerRegistry(credentialsId: 'docker-cred') {
+                    withDockerRegistry(credentialsId: 'docker') {
                         sh 'docker run -d -it --name cont_javaspringboot -p 7000:8080 javaspringboot'  
                     }
                 }
@@ -58,9 +58,9 @@ pipeline{
         stage('docker push'){
             steps{
                 script{
-                    withDockerRegistry(credentialsId: 'docker-cred') {
-                        sh 'docker tag javaspringboot vootlasaicharan/javaspringboot:v1'
-                        sh  'docker push vootlasaicharan/javaspringboot:v1'
+                    withDockerRegistry(credentialsId: 'docker') {
+                        sh 'docker tag javaspringboot chetanbk/javaspringboot:version1'
+                        sh  'docker push chetanbk/javaspringboot:version1'
                     }
                 }
             }
@@ -79,7 +79,7 @@ pipeline{
                         <p>Status: ${currentBuild.currentResult}</p>
                         <p>View build: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
                     """,
-                    to: 'charanv369@gmail.com',
+                    to: 'chetanbkcbk@gmail.com',
                     from: 'jenkins@gmail.com',
                     replyTo: 'jenkins@gmail.com',
                     mimeType: 'text/html' // Comma added before this line
